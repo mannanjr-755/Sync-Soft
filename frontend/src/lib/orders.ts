@@ -8,7 +8,19 @@ export async function generateOrderNumber(restaurantId: string, slug: string): P
     .join("")
     .slice(0, 3) || "ORD";
 
-  const count = await prisma.order.count({ where: { restaurantId } });
-  const next = count + 1;
-  return `${prefix}-${String(next).padStart(4, "0")}`;
+  // Max suffix + 1 — not count + 1. Deletions leave gaps, so count-based
+  // numbers can collide with @@unique([restaurantId, orderNumber]).
+  const existing = await prisma.order.findMany({
+    where: { restaurantId, orderNumber: { startsWith: `${prefix}-` } },
+    select: { orderNumber: true },
+  });
+
+  let max = 0;
+  const prefixLen = prefix.length + 1;
+  for (const { orderNumber } of existing) {
+    const n = Number.parseInt(orderNumber.slice(prefixLen), 10);
+    if (Number.isFinite(n) && n > max) max = n;
+  }
+
+  return `${prefix}-${String(max + 1).padStart(4, "0")}`;
 }

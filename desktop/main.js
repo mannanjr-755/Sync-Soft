@@ -3,7 +3,7 @@ const fs = require("fs");
 const path = require("path");
 
 /** Production DelhiDarbar dashboard — same live deployment used by the web app. */
-const CRM_URL = process.env.CRM_DESKTOP_URL || "https://DelhiDarbar-nfc-soft-frontend.vercel.app";
+const CRM_URL = process.env.CRM_DESKTOP_URL || "https://delhidarbarsoft.vercel.app";
 
 let mainWindow = null;
 

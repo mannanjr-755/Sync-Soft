@@ -4,7 +4,7 @@ Desktop wrapper for the existing production DelhiDarbar dashboard. Does **not** 
 
 ## Production URL
 
-`https://DelhiDarbar-nfc-soft-frontend.vercel.app`
+`https://delhidarbarsoft.vercel.app`
 
 ## Build installer (Windows)
 

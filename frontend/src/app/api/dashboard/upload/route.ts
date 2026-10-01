@@ -12,6 +12,18 @@ const ALLOWED = new Map([
   ["image/gif", "gif"],
 ]);
 
+/**
+ * Vercel Blob is used whenever a store is connected, which is the case for the
+ * deployed app. Serverless filesystems are read-only outside /tmp, so writing
+ * into `public/` only works for `next dev` and the packaged Electron app.
+ */
+function hasBlobStore() {
+  return Boolean(
+    process.env.BLOB_READ_WRITE_TOKEN?.trim() ||
+      (process.env.VERCEL_OIDC_TOKEN?.trim() && process.env.BLOB_STORE_ID?.trim())
+  );
+}
+
 function uploadDirs() {
   // Customer menu is served by restaurantorder — store images where that app can serve them.
   const customerPublic =
@@ -52,13 +64,29 @@ export async function POST(request: Request) {
 
   const bytes = Buffer.from(await file.arrayBuffer());
   const filename = `${Date.now()}-${randomBytes(6).toString("hex")}.${ext}`;
-  const dirs = uploadDirs();
 
-  for (const dir of dirs) {
-    await mkdir(dir, { recursive: true });
-    await writeFile(path.join(dir, filename), bytes);
+  try {
+    if (hasBlobStore()) {
+      const { put } = await import("@vercel/blob");
+      const blob = await put(`uploads/menu/${filename}`, bytes, {
+        access: "public",
+        contentType: file.type,
+        token: process.env.BLOB_READ_WRITE_TOKEN,
+        addRandomSuffix: false,
+      });
+      // Absolute URL: the Digital Menu is a different app on a different origin,
+      // so a root-relative path would 404 there.
+      return NextResponse.json({ url: blob.url });
+    }
+
+    for (const dir of uploadDirs()) {
+      await mkdir(dir, { recursive: true });
+      await writeFile(path.join(dir, filename), bytes);
+    }
+
+    return NextResponse.json({ url: `/uploads/menu/${filename}` });
+  } catch (err) {
+    console.error("Upload error:", (err as Error)?.message ?? err);
+    return NextResponse.json({ error: "Image upload failed" }, { status: 500 });
   }
-
-  const url = `/uploads/menu/${filename}`;
-  return NextResponse.json({ url });
 }
