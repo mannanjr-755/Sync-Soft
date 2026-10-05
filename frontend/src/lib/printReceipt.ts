@@ -111,17 +111,22 @@ function formatReceiptMoney(amount: number): string {
 /**
  * 58mm: ~48mm content (safe printable zone on narrow rolls).
  * 80mm: ~72mm content (safe printable zone on wide rolls).
+ * printColumns scales monospace density to avoid right-side clipping.
  */
-function receiptStyle(paperMm: ReceiptPaperWidth): string {
+function receiptStyle(paperMm: ReceiptPaperWidth, printColumns = paperMm === 58 ? 32 : 40): string {
   const contentMm = paperMm === 80 ? 72 : 48;
   const pageMm = paperMm;
   const padX = paperMm === 80 ? "2.5mm" : "1mm";
-  const nameSize = paperMm === 80 ? "14px" : "12px";
-  const subSize = paperMm === 80 ? "9px" : "8px";
-  const itemSize = paperMm === 80 ? "10px" : "9px";
-  const totalsGrand = paperMm === 80 ? "13px" : "12px";
+  const cols = Math.min(64, Math.max(16, Math.floor(printColumns) || (paperMm === 58 ? 32 : 40)));
+  // Approximate monospace fit: more columns → slightly smaller type.
+  const baseItem = paperMm === 80 ? 10 : 9;
+  const scale = cols <= 32 ? 1 : cols <= 40 ? 0.95 : cols <= 48 ? 0.88 : 0.8;
+  const nameSize = `${Math.round((paperMm === 80 ? 14 : 12) * scale)}px`;
+  const subSize = `${Math.round((paperMm === 80 ? 9 : 8) * scale)}px`;
+  const itemSize = `${Math.max(7, Math.round(baseItem * scale))}px`;
+  const totalsGrand = `${Math.round((paperMm === 80 ? 13 : 12) * scale)}px`;
   const logoMm = paperMm === 80 ? "14mm" : "11mm";
-  const lxSize = paperMm === 80 ? "7.5px" : "6.5px";
+  const lxSize = `${Math.round((paperMm === 80 ? 7.5 : 6.5) * scale * 10) / 10}px`;
 
   return `
     * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -208,7 +213,8 @@ export function buildReceiptHtml(
   restaurant?: ReceiptRestaurant,
   logoSrc?: string | null,
   billingOptions?: BillingOptions,
-  paperMm: ReceiptPaperWidth = 58
+  paperMm: ReceiptPaperWidth = 58,
+  printColumns?: number
 ): string {
   const billing = calcBillingTotals(orderSubtotal(order), billingOptions);
   const typeLabel =
@@ -236,12 +242,14 @@ export function buildReceiptHtml(
     )
     .join("");
 
+  const cols = printColumns ?? (paperMm === 58 ? 32 : 40);
+
   return `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8" />
   <title>Receipt ${escapeHtml(order.orderNumber)}</title>
-  <style>${receiptStyle(paperMm)}</style>
+  <style>${receiptStyle(paperMm, cols)}</style>
 </head>
 <body>
   <div class="receipt">
@@ -318,7 +326,8 @@ export function buildReceiptHtml(
 export function buildKotHtml(
   order: ReceiptOrder,
   restaurant?: ReceiptRestaurant,
-  paperMm: ReceiptPaperWidth = 58
+  paperMm: ReceiptPaperWidth = 58,
+  printColumns?: number
 ): string {
   const typeLabel =
     order.orderType === "TAKE_AWAY"
@@ -340,12 +349,14 @@ export function buildKotHtml(
     )
     .join("");
 
+  const cols = printColumns ?? (paperMm === 58 ? 32 : 40);
+
   return `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8" />
   <title>KOT ${escapeHtml(order.orderNumber)}</title>
-  <style>${receiptStyle(paperMm)}</style>
+  <style>${receiptStyle(paperMm, cols)}</style>
 </head>
 <body>
   <div class="receipt">
@@ -506,16 +517,280 @@ function printHtmlDocument(html: string): Promise<void> {
   });
 }
 
+export type ActivePrinterConfig = {
+  paperWidth: ReceiptPaperWidth;
+  printColumns: number;
+  copies: number;
+  deviceName: string | null;
+  mockPrinter: boolean;
+};
+
+/** Open a mock preview window so formatting can be verified without hardware. */
+export function openMockPrintPreview(html: string, label = "Mock print"): void {
+  if (typeof window === "undefined") return;
+  const popup = window.open("", "_blank", "noopener,noreferrer,width=420,height=720");
+  if (!popup) {
+    console.info(`[${label}]`, html.slice(0, 500));
+    return;
+  }
+  popup.document.open();
+  popup.document.write(
+    html.replace(
+      "<body>",
+      `<body><div style="position:sticky;top:0;z-index:9;background:#111;color:#ddbe7e;font:12px/1.4 sans-serif;padding:8px 12px;text-align:center;">${label} — not sent to a physical printer</div>`
+    )
+  );
+  popup.document.close();
+}
+
+async function dispatchPrintHtml(
+  html: string,
+  config?: Partial<ActivePrinterConfig>
+): Promise<"mock" | "desktop" | "browser"> {
+  const copies = Math.min(10, Math.max(1, Math.floor(config?.copies ?? 1)));
+  const mock = Boolean(config?.mockPrinter);
+  const deviceName = config?.deviceName?.trim() || null;
+
+  if (mock) {
+    openMockPrintPreview(html, "Mock printer");
+    console.info("[Mock printer] Generated receipt HTML", {
+      copies,
+      length: html.length,
+    });
+    return "mock";
+  }
+
+  const { isDesktopApp, printHtmlOnDesktop } = await import("@/lib/desktopBridge");
+  if (isDesktopApp() && deviceName) {
+    await printHtmlOnDesktop({ html, deviceName, copies, silent: true });
+    return "desktop";
+  }
+
+  for (let i = 0; i < copies; i++) {
+    await printHtmlDocument(html);
+  }
+  return "browser";
+}
+
+let cachedPrinterConfig: ActivePrinterConfig | null = null;
+let cachedPrinterConfigAt = 0;
+
+/** Fetch RECEIPT-role printer settings (short-lived client cache). */
+export async function loadActivePrinterConfig(): Promise<ActivePrinterConfig | null> {
+  if (typeof window === "undefined") return null;
+  const now = Date.now();
+  if (cachedPrinterConfig && now - cachedPrinterConfigAt < 15_000) {
+    return cachedPrinterConfig;
+  }
+  try {
+    const res = await fetch("/api/dashboard/printer-settings?role=RECEIPT", {
+      cache: "no-store",
+    });
+    if (!res.ok) return cachedPrinterConfig;
+    const data = await res.json();
+    const s = data.setting;
+    if (!s) return null;
+    const config: ActivePrinterConfig = {
+      paperWidth: s.paperWidth === 58 ? 58 : 80,
+      printColumns: Math.floor(Number(s.printColumns) || 40),
+      copies: Math.max(1, Math.floor(Number(s.copies) || 1)),
+      deviceName: typeof s.deviceName === "string" ? s.deviceName : null,
+      mockPrinter: Boolean(s.mockPrinter),
+    };
+    cachedPrinterConfig = config;
+    cachedPrinterConfigAt = now;
+    setReceiptPaperWidth(config.paperWidth);
+    return config;
+  } catch {
+    return cachedPrinterConfig;
+  }
+}
+
+export function invalidatePrinterConfigCache(): void {
+  cachedPrinterConfig = null;
+  cachedPrinterConfigAt = 0;
+}
+
+export function buildTestReceiptHtml(opts: {
+  printerName: string;
+  role: string;
+  paperWidth: ReceiptPaperWidth;
+  printColumns: number;
+  deviceName: string | null;
+  mockPrinter: boolean;
+}): string {
+  const paperMm = opts.paperWidth;
+  const cols = opts.printColumns;
+  const now = formatDateTime(new Date());
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Test Print</title>
+  <style>${receiptStyle(paperMm, cols)}</style>
+</head>
+<body>
+  <div class="receipt">
+    <p class="r-name">TEST PRINT</p>
+    <p class="r-sub">${escapeHtml(opts.mockPrinter ? "MOCK MODE" : "PHYSICAL PRINTER")}</p>
+    <hr class="dash" />
+    <table class="kv">
+      <tr><td class="k">Name</td><td class="v">${escapeHtml(opts.printerName || "—")}</td></tr>
+      <tr><td class="k">Role</td><td class="v">${escapeHtml(opts.role)}</td></tr>
+      <tr><td class="k">Paper</td><td class="v">${paperMm}mm</td></tr>
+      <tr><td class="k">Columns</td><td class="v">${cols}</td></tr>
+      <tr><td class="k">Device</td><td class="v">${escapeHtml(opts.deviceName || "—")}</td></tr>
+      <tr><td class="k">Time</td><td class="v">${escapeHtml(now)}</td></tr>
+    </table>
+    <hr class="dash" />
+    <table class="items">
+      <thead><tr><th class="item">Item</th><th class="n qty">Qty</th><th class="n amt">Amt</th></tr></thead>
+      <tbody>
+        <tr><td class="item">Sample Item A<span class="unit">@ ${formatReceiptMoney(100)}</span></td><td class="n qty">1</td><td class="n amt">${formatReceiptMoney(100)}</td></tr>
+        <tr><td class="item">Long Sample Item Name That Must Wrap<span class="unit">@ ${formatReceiptMoney(250)}</span></td><td class="n qty">2</td><td class="n amt">${formatReceiptMoney(500)}</td></tr>
+      </tbody>
+    </table>
+    <hr class="dash" />
+    <table class="totals">
+      <tr class="grand"><td class="l">TOTAL</td><td class="r">${formatReceiptMoney(600)}</td></tr>
+    </table>
+    <p class="thanks">PRINTER OK</p>
+    <div class="lx"><p class="lx-text">POWERED BY <strong>LEXCORE</strong> SOLUTIONS</p></div>
+    <div class="feed"></div>
+  </div>
+</body>
+</html>`;
+}
+
 /** Print the kitchen ticket first, then the customer bill. No order mutations. */
 export async function printOrderReceipt(
   order: ReceiptOrder,
   restaurant?: ReceiptRestaurant,
-  billingOptions?: BillingOptions
+  billingOptions?: BillingOptions,
+  printerConfig?: Partial<ActivePrinterConfig> | null
 ): Promise<void> {
   if (typeof window === "undefined") return;
 
-  const paperMm = getReceiptPaperWidth();
+  const loaded = printerConfig === undefined ? await loadActivePrinterConfig() : printerConfig;
+  const paperMm = loaded?.paperWidth ?? getReceiptPaperWidth();
+  const columns = loaded?.printColumns ?? (paperMm === 58 ? 32 : 40);
+  const copies = loaded?.copies ?? 1;
   const logo = await loadLogoDataUri();
-  await printHtmlDocument(buildKotHtml(order, restaurant, paperMm));
-  await printHtmlDocument(buildReceiptHtml(order, restaurant, logo, billingOptions, paperMm));
+
+  const kot = buildKotHtml(order, restaurant, paperMm, columns);
+  const bill = buildReceiptHtml(order, restaurant, logo, billingOptions, paperMm, columns);
+  const cfg = {
+    paperWidth: paperMm,
+    printColumns: columns,
+    copies,
+    deviceName: loaded?.deviceName ?? null,
+    mockPrinter: Boolean(loaded?.mockPrinter),
+  };
+
+  await dispatchPrintHtml(kot, cfg);
+  await dispatchPrintHtml(bill, cfg);
+}
+
+const autoPrintedIds = new Set<string>();
+
+function wasAutoPrinted(orderId: string): boolean {
+  if (autoPrintedIds.has(orderId)) return true;
+  try {
+    return sessionStorage.getItem(`autoPrinted:${orderId}`) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function markAutoPrinted(orderId: string): void {
+  autoPrintedIds.add(orderId);
+  try {
+    sessionStorage.setItem(`autoPrinted:${orderId}`, "1");
+  } catch {
+    /* ignore */
+  }
+}
+
+/**
+ * Idempotent auto-print after an order reaches COMPLETED.
+ * Never throws into the order flow — failures surface via returned status.
+ */
+export async function maybeAutoPrintCompletedOrder(
+  order: ReceiptOrder & { id: string; status: string },
+  restaurant?: ReceiptRestaurant
+): Promise<{ printed: boolean; reason?: string }> {
+  if (order.status !== "COMPLETED") {
+    return { printed: false, reason: "not-completed" };
+  }
+  if (wasAutoPrinted(order.id)) {
+    return { printed: false, reason: "already-printed" };
+  }
+
+  let setting: {
+    autoPrint?: boolean;
+    mockPrinter?: boolean;
+    deviceName?: string | null;
+    paperWidth?: number;
+    printColumns?: number;
+    copies?: number;
+    name?: string;
+  } | null = null;
+
+  try {
+    const res = await fetch("/api/dashboard/printer-settings?role=RECEIPT", {
+      cache: "no-store",
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setting = data.setting;
+    }
+  } catch {
+    return { printed: false, reason: "settings-unavailable" };
+  }
+
+  if (!setting?.autoPrint) {
+    return { printed: false, reason: "auto-print-off" };
+  }
+
+  if (!setting.mockPrinter) {
+    const { isDesktopApp } = await import("@/lib/desktopBridge");
+    if (!isDesktopApp()) {
+      return {
+        printed: false,
+        reason:
+          "Open DelhiDarbar CRM desktop app for USB auto-print, or enable Mock printer in Settings.",
+      };
+    }
+    if (!setting.deviceName) {
+      return {
+        printed: false,
+        reason: "No printer configured. Open Settings → Printer Settings.",
+      };
+    }
+  }
+
+  markAutoPrinted(order.id);
+
+  try {
+    await printOrderReceipt(order, restaurant, undefined, {
+      paperWidth: setting.paperWidth === 58 ? 58 : 80,
+      printColumns: Math.floor(Number(setting.printColumns) || 40),
+      copies: Math.max(1, Math.floor(Number(setting.copies) || 1)),
+      deviceName: setting.deviceName ?? null,
+      mockPrinter: Boolean(setting.mockPrinter),
+    });
+    return { printed: true };
+  } catch (err) {
+    // Allow a manual retry after a real failure.
+    autoPrintedIds.delete(order.id);
+    try {
+      sessionStorage.removeItem(`autoPrinted:${order.id}`);
+    } catch {
+      /* ignore */
+    }
+    return {
+      printed: false,
+      reason: err instanceof Error ? err.message : "print-failed",
+    };
+  }
 }

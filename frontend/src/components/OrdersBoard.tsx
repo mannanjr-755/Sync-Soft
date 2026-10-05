@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { format } from "date-fns";
 import { Pencil, Printer, Search } from "lucide-react";
-import { printOrderReceipt, type BillingOptions, type ReceiptRestaurant } from "@/lib/printReceipt";
+import { printOrderReceipt, maybeAutoPrintCompletedOrder, type BillingOptions, type ReceiptRestaurant } from "@/lib/printReceipt";
 import { PrintBillingDialog } from "@/components/PrintBillingDialog";
 import { toast } from "@/components/ToastProvider";
 import { formatMoney, nextStatus, ORDER_STATUSES, STATUS_LABELS, type OrderStatus } from "@/lib/utils";
@@ -277,6 +277,26 @@ export function OrdersBoard() {
       if (res.ok) {
         const data = await res.json();
         setOrders((prev) => prev.map((o) => (o.id === orderId ? data.order : o)));
+        if (data.order?.status === "COMPLETED") {
+          void maybeAutoPrintCompletedOrder(data.order, restaurantInfo ?? undefined).then(
+            (result) => {
+              if (result.printed) {
+                toast.success(`Receipt auto-printed for ${data.order.orderNumber}.`);
+              } else if (
+                result.reason &&
+                result.reason !== "auto-print-off" &&
+                result.reason !== "already-printed" &&
+                result.reason !== "not-completed"
+              ) {
+                toast.error(
+                  result.reason === "settings-unavailable"
+                    ? "Order completed, but printer settings could not be loaded."
+                    : `Order completed, but printing failed: ${result.reason}`
+                );
+              }
+            }
+          );
+        }
       }
     } finally {
       setUpdatingId(null);

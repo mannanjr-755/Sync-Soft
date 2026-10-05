@@ -1,4 +1,4 @@
-const { app, BrowserWindow, shell, Menu } = require("electron");
+const { app, BrowserWindow, shell, Menu, ipcMain } = require("electron");
 const fs = require("fs");
 const path = require("path");
 
@@ -6,6 +6,120 @@ const path = require("path");
 const CRM_URL = process.env.CRM_DESKTOP_URL || "https://delhidarbarsoft.vercel.app";
 
 let mainWindow = null;
+
+const VIRTUAL_PRINTER_RE =
+  /microsoft print to pdf|onenote|fax|xps document writer|microsoft xps/i;
+
+function isPhysicalPrinter(name) {
+  return Boolean(name) && !VIRTUAL_PRINTER_RE.test(String(name));
+}
+
+function sanitizeDeviceName(value) {
+  return String(value || "")
+    .replace(/[\u0000-\u001F\u007F]/g, "")
+    .trim()
+    .slice(0, 200);
+}
+
+function registerPrinterIpc() {
+  ipcMain.handle("printers:list", async (event) => {
+    try {
+      const printers = await event.sender.getPrintersAsync();
+      return (printers || [])
+        .filter((p) => isPhysicalPrinter(p.name))
+        .map((p) => ({
+          name: p.name,
+          displayName: p.displayName || p.name,
+          status: typeof p.status === "number" ? p.status : 0,
+          isDefault: Boolean(p.isDefault),
+        }));
+    } catch (err) {
+      console.error("printers:list failed", err);
+      throw new Error("Could not list Windows printers.");
+    }
+  });
+
+  ipcMain.handle("printers:print", async (event, opts = {}) => {
+    const deviceName = sanitizeDeviceName(opts.deviceName);
+    const html = typeof opts.html === "string" ? opts.html : "";
+    const copies = Math.min(10, Math.max(1, Math.floor(Number(opts.copies) || 1)));
+    const silent = opts.silent !== false;
+
+    if (!html || html.length > 1_500_000) {
+      return { ok: false, error: "Invalid print document." };
+    }
+    if (!deviceName) {
+      return { ok: false, error: "No printer selected." };
+    }
+
+    // Only allow printers currently installed on this machine.
+    let allowed = false;
+    try {
+      const printers = await event.sender.getPrintersAsync();
+      allowed = (printers || []).some(
+        (p) => p.name === deviceName && isPhysicalPrinter(p.name)
+      );
+    } catch {
+      allowed = false;
+    }
+    if (!allowed) {
+      return {
+        ok: false,
+        error: "Selected printer is not available on this Windows PC.",
+      };
+    }
+
+    let printWin = null;
+    try {
+      printWin = new BrowserWindow({
+        show: false,
+        width: 400,
+        height: 600,
+        webPreferences: {
+          sandbox: true,
+          contextIsolation: true,
+          nodeIntegration: false,
+        },
+      });
+
+      await printWin.loadURL(
+        `data:text/html;charset=utf-8,${encodeURIComponent(html)}`
+      );
+      // Allow layout/images a brief settle before printing.
+      await new Promise((r) => setTimeout(r, 450));
+
+      for (let i = 0; i < copies; i++) {
+        // eslint-disable-next-line no-await-in-loop
+        await new Promise((resolve, reject) => {
+          printWin.webContents.print(
+            {
+              silent,
+              printBackground: true,
+              deviceName,
+              margins: { marginType: "none" },
+            },
+            (success, failureReason) => {
+              if (success) resolve();
+              else reject(new Error(failureReason || "Print failed."));
+            }
+          );
+        });
+      }
+
+      return { ok: true };
+    } catch (err) {
+      console.error("printers:print failed", err);
+      return {
+        ok: false,
+        error: err instanceof Error ? err.message : "Print failed.",
+      };
+    } finally {
+      if (printWin && !printWin.isDestroyed()) {
+        printWin.destroy();
+      }
+    }
+  });
+}
 
 function resolveAppIcon() {
   const candidates = [
@@ -136,6 +250,7 @@ if (!gotLock) {
     if (process.platform === "win32") {
       app.setAppUserModelId("com.DelhiDarbar.crm");
     }
+    registerPrinterIpc();
     createWindow();
 
     app.on("activate", () => {

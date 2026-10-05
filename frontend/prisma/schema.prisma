@@ -33,8 +33,35 @@ model Restaurant {
   menuItems     MenuItem[]
   orders        Order[]
   customers     Customer[]
-  payments      Payment[]
-  tableRequests TableRequest[]
+  payments        Payment[]
+  tableRequests   TableRequest[]
+  printerSettings PrinterSetting[]
+}
+
+/// Per-restaurant thermal printer configuration (USB / Windows installed printers).
+model PrinterSetting {
+  id           String     @id @default(cuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  /// Friendly label shown in Settings
+  name         String
+  /// RECEIPT | KITCHEN | BAR | LABEL | OTHER
+  role         String     @default("RECEIPT")
+  /// USB (Windows installed printer)
+  connection   String     @default("USB")
+  /// 58 | 80
+  paperWidth   Int        @default(80)
+  /// Exact Windows printer device name (from Electron bridge)
+  deviceName   String?
+  printColumns Int        @default(40)
+  copies       Int        @default(1)
+  autoPrint    Boolean    @default(false)
+  mockPrinter  Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([restaurantId, role])
+  @@index([restaurantId])
 }
 
 model Customer {
