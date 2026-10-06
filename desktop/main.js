@@ -2,8 +2,8 @@ const { app, BrowserWindow, shell, Menu, ipcMain } = require("electron");
 const fs = require("fs");
 const path = require("path");
 
-/** Production DelhiDarbar dashboard — same live deployment used by the web app. */
-const CRM_URL = process.env.CRM_DESKTOP_URL || "https://delhidarbarsoft.vercel.app";
+/** Production Sync dashboard — same live deployment used by the web app. */
+const CRM_URL = process.env.CRM_DESKTOP_URL || "https://synccoffee-soft.vercel.app";
 
 let mainWindow = null;
 
@@ -146,7 +146,7 @@ function offlineHtml(detail) {
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>DelhiDarbar CRM</title>
+  <title>Sync CRM</title>
   <style>
     html,body{margin:0;height:100%;font-family:Segoe UI,sans-serif;background:#101820;color:#f2ede3;}
     main{min-height:100%;display:flex;align-items:center;justify-content:center;padding:32px;text-align:center;}
@@ -161,7 +161,7 @@ function offlineHtml(detail) {
 <body>
   <main>
     <div class="card">
-      <h1>DelhiDarbar CRM</h1>
+      <h1>Sync CRM</h1>
       <p>The desktop app could not load the live CRM. Check your internet connection, then try again.</p>
       <code>${safeDetail}</code>
       <button onclick="location.reload()">Retry</button>
@@ -179,7 +179,7 @@ function createWindow() {
     height: 900,
     minWidth: 1100,
     minHeight: 700,
-    title: "DelhiDarbar CRM",
+    title: "Sync CRM",
     backgroundColor: "#101820",
     autoHideMenuBar: true,
     show: false,
@@ -227,7 +227,7 @@ function createWindow() {
   });
 
   mainWindow.loadURL(CRM_URL, {
-    userAgent: `${mainWindow.webContents.getUserAgent()} DelhiDarbarCRMDesktop/1.0`,
+    userAgent: `${mainWindow.webContents.getUserAgent()} SyncCRMDesktop/1.0`,
   });
 
   mainWindow.on("closed", () => {
@@ -248,7 +248,7 @@ if (!gotLock) {
 
   app.whenReady().then(() => {
     if (process.platform === "win32") {
-      app.setAppUserModelId("com.DelhiDarbar.crm");
+      app.setAppUserModelId("com.sync.crm");
     }
     registerPrinterIpc();
     createWindow();

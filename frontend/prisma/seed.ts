@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("Seeding DelhiDarbar demo data...");
+  console.log("Seeding Sync demo data...");
 
   // Clean existing data for a clean demo
   await prisma.orderItem.deleteMany();
@@ -15,13 +15,13 @@ async function main() {
   await prisma.user.deleteMany();
   await prisma.restaurant.deleteMany();
 
-  const passwordHash = await bcrypt.hash("123456", 10);
+  const passwordHash = await bcrypt.hash("sync@123", 10);
 
-  const fouram = await prisma.restaurant.create({
+  const sync = await prisma.restaurant.create({
     data: {
-      name: "DelhiDarbar",
-      slug: "DelhiDarbar",
-      logo: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=200&h=200&fit=crop",
+      name: "Sync",
+      slug: "sync",
+      logo: "/logo.png",
       coverImage:
         "https://images.unsplash.com/photo-1558030006-450675393462?w=1400&h=700&fit=crop",
       description: "Modern cafe & restaurant — barista-crafted coffee, fresh brews, and house favorites.",
@@ -47,11 +47,11 @@ async function main() {
 
   await prisma.user.create({
     data: {
-      email: "admin@delhidarbar.com",
+      email: "admin@sync.com",
       passwordHash,
       name: "Admin",
       role: "ADMIN",
-      restaurantId: fouram.id,
+      restaurantId: sync.id,
     },
   });
 
@@ -59,9 +59,9 @@ async function main() {
   for (let n = 1; n <= 12; n++) {
     await prisma.table.create({
       data: {
-        restaurantId: fouram.id,
+        restaurantId: sync.id,
         tableNumber: n,
-        uniqueCode: `DelhiDarbar-t${n}-${Math.random().toString(36).slice(2, 8)}`,
+        uniqueCode: `sync-t${n}-${Math.random().toString(36).slice(2, 8)}`,
         active: true,
       },
     });
@@ -188,7 +188,7 @@ async function main() {
   for (const cat of categories) {
     const category = await prisma.menuCategory.create({
       data: {
-        restaurantId: fouram.id,
+        restaurantId: sync.id,
         name: cat.name,
         sortOrder: sort++,
       },
@@ -196,7 +196,7 @@ async function main() {
     for (const item of cat.items) {
       await prisma.menuItem.create({
         data: {
-          restaurantId: fouram.id,
+          restaurantId: sync.id,
           categoryId: category.id,
           name: item.name,
           description: item.description,
@@ -238,8 +238,8 @@ async function main() {
   });
 
   console.log("Done!");
-  console.log("Customer menu: /r/DelhiDarbar/t/12");
-  console.log("Admin login: admin@delhidarbar.com / 123456");
+  console.log("Customer menu: /r/sync/t/12");
+  console.log("Admin login: admin@sync.com / sync@123");
 }
 
 main()

@@ -37,12 +37,12 @@ export function LoginForm() {
   }
 
   const inputClass =
-    "w-full rounded-xl border border-[#2e3b47] bg-[#101820] px-4 py-3 text-sm text-white outline-none placeholder:text-[#8a8478] focus:border-[#c6a15b] focus:ring-1 focus:ring-[#c6a15b]/40";
+    "input-theme w-full rounded-xl px-4 py-3 text-sm outline-none focus:ring-1 focus:ring-[var(--gold)]/40";
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <label className="block text-sm">
-        <span className="mb-1.5 block text-[#b9b2a5]">Email</span>
+        <span className="mb-1.5 block text-[var(--text-muted)]">Email</span>
         <input
           type="email"
           required
@@ -50,10 +50,11 @@ export function LoginForm() {
           onChange={(e) => setEmail(e.target.value)}
           className={inputClass}
           placeholder="Enter your email"
+          autoComplete="email"
         />
       </label>
       <label className="block text-sm">
-        <span className="mb-1.5 block text-[#b9b2a5]">Password</span>
+        <span className="mb-1.5 block text-[var(--text-muted)]">Password</span>
         <input
           type="password"
           required
@@ -61,11 +62,12 @@ export function LoginForm() {
           onChange={(e) => setPassword(e.target.value)}
           className={inputClass}
           placeholder="Enter your password"
+          autoComplete="current-password"
         />
       </label>
 
       {error && (
-        <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+        <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-600">
           {error}
         </p>
       )}
@@ -73,7 +75,7 @@ export function LoginForm() {
       <button
         type="submit"
         disabled={loading}
-        className="w-full rounded-md bg-[#c6a15b] py-3.5 text-sm font-bold uppercase tracking-wider text-[#f2ede3] disabled:opacity-60"
+        className="w-full rounded-xl bg-[var(--gold)] py-3.5 text-sm font-bold uppercase tracking-wider text-white transition hover:bg-[var(--gold-bright)] disabled:opacity-60"
       >
         {loading ? "Signing in…" : "Sign in"}
       </button>

@@ -81,7 +81,7 @@ function orderSubtotal(order: ReceiptOrder): number {
 
 export type ReceiptPaperWidth = 58 | 80;
 
-const PAPER_STORAGE_KEY = "DelhiDarbar-receipt-paper-mm";
+const PAPER_STORAGE_KEY = "sync-receipt-paper-mm";
 
 export function getReceiptPaperWidth(): ReceiptPaperWidth {
   if (typeof window === "undefined") return 58;
@@ -391,7 +391,7 @@ export function buildKotHtml(
 }
 
 /**
- * Inline the DelhiDarbar logo as a data URI. A data URI guarantees the print window
+ * Inline the Sync logo as a data URI. A data URI guarantees the print window
  * never shows a missing-image box, and it loads synchronously enough that the
  * logo is always present on the printed receipt.
  */
@@ -758,7 +758,7 @@ export async function maybeAutoPrintCompletedOrder(
       return {
         printed: false,
         reason:
-          "Open DelhiDarbar CRM desktop app for USB auto-print, or enable Mock printer in Settings.",
+          "Open Sync CRM desktop app for USB auto-print, or enable Mock printer in Settings.",
       };
     }
     if (!setting.deviceName) {

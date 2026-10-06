@@ -21,6 +21,7 @@
 
 # production
 /build
+/dist
 
 # misc
 .DS_Store
@@ -36,14 +37,17 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# env files — never commit secrets
+.env
+.env.*
+.env.local
+.env.production
 !.env.example
+!frontend/.env.example
 
 # local database
 /frontend/prisma/*.db
 /frontend/prisma/*.db-journal
-.vercel
 
 # typescript
 *.tsbuildinfo
@@ -53,6 +57,5 @@ next-env.d.ts
 /desktop/node_modules/
 /desktop/dist/
 
+# vercel
 .vercel
-.env*
-

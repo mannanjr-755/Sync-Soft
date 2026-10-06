@@ -12,10 +12,10 @@ export const metadata: Metadata = {
 export default function LoginPage() {
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-[var(--bg)] px-4 py-12 text-[var(--text)]">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(198,161,91,0.22),transparent_55%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(30,75,184,0.14),transparent_55%)]" />
 
       <Link
-        href={process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}
+        href={process.env.NEXT_PUBLIC_SITE_URL || "https://sync-digital-menu.vercel.app"}
         className="absolute left-4 top-4 z-10 inline-flex items-center gap-2 rounded-lg border border-[var(--gold)]/40 px-3 py-2 text-xs font-semibold text-[var(--gold-bright)] transition hover:bg-[var(--gold)]/10 sm:left-6 sm:top-6"
       >
         <ArrowLeft className="h-3.5 w-3.5" />

@@ -1,5 +1,5 @@
 /**
- * Regenerates Windows app icons from the DelhiDarbar brand asset.
+ * Regenerates Windows app icons from the Sync brand asset.
  * Does not touch CRM application logic.
  */
 const fs = require("fs");

@@ -1,9 +1,9 @@
 {
-  "name": "DelhiDarbar-crm-desktop",
+  "name": "sync-crm-desktop",
   "version": "1.0.0",
   "private": true,
-  "description": "DelhiDarbar CRM desktop application",
-  "author": "DelhiDarbar",
+  "description": "Sync CRM desktop application",
+  "author": "Sync",
   "main": "main.js",
   "scripts": {
     "icons": "node scripts/generate-icons.js",
@@ -13,9 +13,9 @@
     "dist:portable": "electron-builder --win portable"
   },
   "build": {
-    "appId": "com.DelhiDarbar.crm",
-    "productName": "DelhiDarbar CRM",
-    "copyright": "Copyright © DelhiDarbar",
+    "appId": "com.sync.crm",
+    "productName": "Sync CRM",
+    "copyright": "Copyright © Sync",
     "directories": {
       "output": "dist",
       "buildResources": "build"
@@ -41,14 +41,14 @@
         }
       ],
       "icon": "build/icon.ico",
-      "artifactName": "DelhiDarbar-CRM-Setup-${version}.${ext}"
+      "artifactName": "Sync-CRM-Setup-${version}.${ext}"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "DelhiDarbar CRM",
+      "shortcutName": "Sync CRM",
       "installerIcon": "build/icon.ico",
       "uninstallerIcon": "build/icon.ico",
       "installerHeaderIcon": "build/icon.ico",

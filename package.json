@@ -1,5 +1,5 @@
 {
-  "name": "DelhiDarbar-nfc-soft",
+  "name": "sync-nfc-soft",
   "version": "0.1.0",
   "private": true,
   "workspaces": [
@@ -13,7 +13,8 @@
     "db:push": "npm run db:push --workspace=frontend",
     "db:seed": "npm run db:seed --workspace=frontend",
     "db:studio": "npm run db:studio --workspace=frontend",
-    "db:reset": "npm run db:reset --workspace=frontend"
+    "db:reset": "npm run db:reset --workspace=frontend",
+    "db:ensure-admin": "npm run db:ensure-admin --workspace=frontend"
   },
-  "description": "Staff dashboard moved out of `restaurantorder`. Customer home + digital menu stay in `restaurantorder`."
+  "description": "Sync staff dashboard. Customer home + digital menu stay in the Sync digital menu app."
 }

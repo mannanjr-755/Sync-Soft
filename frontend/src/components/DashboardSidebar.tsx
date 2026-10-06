@@ -104,13 +104,13 @@ export function DashboardSidebar({
           collapsed ? "flex-col gap-2 px-2" : "gap-3 px-3"
         }`}
       >
-        <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl border border-[var(--gold)]/40 shadow-[var(--shadow)]">
+        <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl border border-[var(--gold)]/30 shadow-[var(--shadow)]">
           <Image
             src="/logo.png"
-            alt="DelhiDarbar"
+            alt="Sync"
             width={40}
             height={40}
-            className="h-full w-full object-cover"
+            className="h-full w-full object-contain"
             priority
           />
         </div>
@@ -120,7 +120,7 @@ export function DashboardSidebar({
               {restaurantName}
             </p>
             <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--text-dim)]">
-              Kitchen Dashboard
+              Sync Dashboard
             </p>
           </div>
         )}

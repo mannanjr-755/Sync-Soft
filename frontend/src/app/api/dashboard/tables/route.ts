@@ -3,7 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireStaff } from "@/lib/session";
 
-const CUSTOMER_MENU_URL = "https://dehlidarbardigitalmenu.vercel.app";
+const CUSTOMER_MENU_URL = "https://sync-digital-menu.vercel.app";
 
 export async function GET() {
   const session = await requireStaff();

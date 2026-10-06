@@ -4,11 +4,10 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "DelhiDarbar",
-    template: "%s · DelhiDarbar",
+    default: "Sync",
+    template: "%s · Sync",
   },
-  description:
-    "DelhiDarbar — Restaurant, cafe & store kitchen dashboard.",
+  description: "Sync — Restaurant, cafe & store kitchen dashboard.",
   icons: {
     icon: [{ url: "/logo.png", type: "image/png" }],
     apple: [{ url: "/logo.png", type: "image/png" }],
@@ -18,7 +17,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" data-theme="dark" className="dark h-full antialiased" suppressHydrationWarning>
+    <html lang="en" data-theme="light" className="h-full antialiased" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

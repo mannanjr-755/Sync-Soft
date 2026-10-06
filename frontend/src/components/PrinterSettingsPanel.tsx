@@ -46,7 +46,7 @@ export function PrinterSettingsPanel() {
       if (!isDesktopApp()) {
         setPrinters([]);
         setPrinterWarning(
-          "Windows printer detection requires the DelhiDarbar CRM desktop app. Mock printer still works in the browser."
+          "Windows printer detection requires the Sync CRM desktop app. Mock printer still works in the browser."
         );
         return;
       }
@@ -210,7 +210,7 @@ export function PrinterSettingsPanel() {
 
       openMockPrintPreview(html, "Browser test print");
       toast.info(
-        "Desktop app not detected. Opened a preview — use DelhiDarbar CRM desktop for silent USB printing."
+        "Desktop app not detected. Opened a preview — use Sync CRM desktop for silent USB printing."
       );
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Test print failed.");

@@ -1,58 +1,65 @@
 /**
- * Bridge to the DelhiDarbar CRM Electron desktop app.
- * Remote Vercel pages cannot list USB printers; the desktop preload exposes IPC.
+ * Bridge to the Sync CRM Electron desktop app.
+ * Supports both `syncDesktop` and legacy `delhiDarbarDesktop` bridge names.
  */
 
-export type DesktopPrinterInfo = {
+export type DesktopPrinter = {
   name: string;
   displayName: string;
-  status: number;
+  description?: string;
+  status?: number;
   isDefault: boolean;
 };
 
+export type DesktopPrintResult = {
+  success: boolean;
+  error?: string;
+};
+
 type DesktopBridge = {
-  isDesktop: true;
-  listPrinters: () => Promise<DesktopPrinterInfo[]>;
+  isDesktop: boolean;
+  listPrinters: () => Promise<DesktopPrinter[]>;
   printHtml: (opts: {
     html: string;
-    deviceName: string;
-    copies?: number;
+    deviceName?: string;
     silent?: boolean;
-  }) => Promise<{ ok: boolean; error?: string }>;
+    copies?: number;
+  }) => Promise<DesktopPrintResult>;
 };
 
 declare global {
   interface Window {
+    syncDesktop?: DesktopBridge;
     delhiDarbarDesktop?: DesktopBridge;
   }
 }
 
-export function isDesktopApp(): boolean {
-  return typeof window !== "undefined" && Boolean(window.delhiDarbarDesktop?.isDesktop);
+function getBridge(): DesktopBridge | undefined {
+  if (typeof window === "undefined") return undefined;
+  return window.syncDesktop ?? window.delhiDarbarDesktop;
 }
 
-export async function listDesktopPrinters(): Promise<DesktopPrinterInfo[]> {
-  if (!isDesktopApp() || !window.delhiDarbarDesktop) {
-    throw new Error(
-      "Open DelhiDarbar CRM desktop app to detect Windows installed printers."
-    );
+export function isDesktopApp(): boolean {
+  return Boolean(getBridge()?.isDesktop);
+}
+
+export async function listDesktopPrinters(): Promise<DesktopPrinter[]> {
+  const bridge = getBridge();
+  if (!isDesktopApp() || !bridge) {
+    throw new Error("Open Sync CRM desktop app to detect Windows installed printers.");
   }
-  return window.delhiDarbarDesktop.listPrinters();
+  return bridge.listPrinters();
 }
 
 export async function printHtmlOnDesktop(opts: {
   html: string;
-  deviceName: string;
-  copies?: number;
+  deviceName?: string;
   silent?: boolean;
-}): Promise<void> {
-  if (!isDesktopApp() || !window.delhiDarbarDesktop) {
-    throw new Error(
-      "Open DelhiDarbar CRM desktop app to print to a Windows USB printer."
-    );
+  copies?: number;
+}): Promise<DesktopPrintResult> {
+  const bridge = getBridge();
+  if (!isDesktopApp() || !bridge) {
+    throw new Error("Open Sync CRM desktop app to print to a Windows USB printer.");
   }
-  const result = await window.delhiDarbarDesktop.printHtml(opts);
-  if (!result.ok) {
-    throw new Error(result.error || "Print failed.");
-  }
+  return bridge.printHtml(opts);
 }

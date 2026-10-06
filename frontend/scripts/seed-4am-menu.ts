@@ -1,6 +1,6 @@
 /**
- * Wipe old menu categories/items and seed the official DelhiDarbar Cafe menu
- * from DelhiDarbar_Cafe_Menu.pdf into the connected DATABASE_URL.
+ * Wipe old menu categories/items and seed the official Sync Cafe menu
+ * from Sync_Cafe_Menu.pdf into the connected DATABASE_URL.
  */
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
@@ -97,18 +97,18 @@ const MENU: { name: string; items: string[] }[] = [
 ];
 
 async function main() {
-  console.log("Connecting and syncing DelhiDarbar Cafe menu...");
+  console.log("Connecting and syncing Sync Cafe menu...");
 
-  let restaurant = await prisma.restaurant.findUnique({ where: { slug: "DelhiDarbar" } });
+  let restaurant = await prisma.restaurant.findUnique({ where: { slug: "sync" } });
   if (!restaurant) {
     restaurant = await prisma.restaurant.create({
       data: {
-        name: "DelhiDarbar Coffee & More",
-        slug: "DelhiDarbar",
+        name: "Sync",
+        slug: "sync",
         description: "Coffee & more — ice tea, hot coffees, mojitos, chillers, frappe, ice coffees.",
-        phone: "+92 300 1234567",
-        whatsapp: "+923001234567",
-        address: "DelhiDarbar Cafe",
+        phone: "+92 300 sync@1237",
+        whatsapp: "+92300sync@1237",
+        address: "Sync Cafe",
         openingHours: JSON.stringify({
           mon: "11:00–23:00",
           tue: "11:00–23:00",
@@ -124,14 +124,14 @@ async function main() {
   } else {
     restaurant = await prisma.restaurant.update({
       where: { id: restaurant.id },
-      data: { name: "DelhiDarbar Coffee & More" },
+      data: { name: "Sync" },
     });
     console.log("Using restaurant:", restaurant.slug);
   }
 
-  const passwordHash = await bcrypt.hash("123456", 10);
+  const passwordHash = await bcrypt.hash("sync@123", 10);
   await prisma.user.upsert({
-    where: { email: "admin@delhidarbar.com" },
+    where: { email: "admin@sync.com" },
     update: {
       passwordHash,
       active: true,
@@ -140,7 +140,7 @@ async function main() {
       restaurantId: restaurant.id,
     },
     create: {
-      email: "admin@delhidarbar.com",
+      email: "admin@sync.com",
       passwordHash,
       name: "Admin",
       role: "ADMIN",
@@ -155,7 +155,7 @@ async function main() {
         data: {
           restaurantId: restaurant.id,
           tableNumber: n,
-          uniqueCode: `DelhiDarbar-t${n}-${Math.random().toString(36).slice(2, 8)}`,
+          uniqueCode: `sync-t${n}-${Math.random().toString(36).slice(2, 8)}`,
           active: true,
         },
       });
@@ -192,7 +192,7 @@ async function main() {
   }
 
   console.log(`Seeded ${MENU.length} categories, ${itemCount} items`);
-  console.log("Admin login: admin@delhidarbar.com / 123456");
+  console.log("Admin login: admin@sync.com / sync@123");
 }
 
 async function withRetry<T>(label: string, fn: () => Promise<T>, attempts = 5): Promise<T> {
@@ -209,7 +209,7 @@ async function withRetry<T>(label: string, fn: () => Promise<T>, attempts = 5): 
   throw lastErr;
 }
 
-withRetry("seed-DelhiDarbar-menu", main)
+withRetry("seed-sync-menu", main)
   .catch((err) => {
     console.error(err);
     process.exitCode = 1;

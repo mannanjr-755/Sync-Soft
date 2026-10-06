@@ -5,44 +5,44 @@
   --font-playfair: "Playfair Display";
 }
 
-/* DelhiDarbar brand palette from logo asset (deep ink #101820 + warm barley gold) */
+/* Sync brand palette from logo (royal blue #1E4BB8 + white surfaces) */
 :root,
 [data-theme="light"] {
-  --bg: #f4f0e9;
-  --bg-elevated: #faf8f3;
+  --bg: #f5f7fb;
+  --bg-elevated: #ffffff;
   --bg-card: #ffffff;
-  --bg-soft: #ece6da;
-  --bg-sidebar: #efeae0;
-  --border: #e0d8c8;
-  --border-strong: #c8bda6;
-  --gold: #a8823b;
-  --gold-bright: #bf9b52;
-  --gold-dim: #86692c;
-  --text: #1d2227;
-  --text-muted: #5e5a52;
-  --text-dim: #8a8478;
+  --bg-soft: #eef2f8;
+  --bg-sidebar: #f8fafc;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --gold: #1e4bb8;
+  --gold-bright: #2a5fd4;
+  --gold-dim: #163a91;
+  --text: #0f172a;
+  --text-muted: #475569;
+  --text-dim: #94a3b8;
   --danger: #ef4444;
   --orange: #f97316;
   --success: #16a34a;
   --info: #2563eb;
-  --purple: #9333ea;
-  --shadow: 0 1px 3px rgba(44, 33, 30, 0.08);
+  --purple: #7c3aed;
+  --shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 4px 16px rgba(30, 75, 184, 0.06);
 }
 
 [data-theme="dark"] {
-  --bg: #101820;
-  --bg-elevated: #151e28;
-  --bg-card: #1a2530;
-  --bg-soft: #1f2b37;
-  --bg-sidebar: #0d141b;
-  --border: #2a3642;
-  --border-strong: #3d4b58;
-  --gold: #c6a15b;
-  --gold-bright: #ddbe7e;
-  --gold-dim: #9a7c3f;
-  --text: #f2ede3;
-  --text-muted: #b9b2a5;
-  --text-dim: #8a8478;
+  --bg: #0b1220;
+  --bg-elevated: #111827;
+  --bg-card: #152033;
+  --bg-soft: #1a2740;
+  --bg-sidebar: #0a101c;
+  --border: #243047;
+  --border-strong: #334155;
+  --gold: #3b82f6;
+  --gold-bright: #60a5fa;
+  --gold-dim: #2563eb;
+  --text: #f1f5f9;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
   --danger: #ef4444;
   --orange: #f97316;
   --success: #22c55e;
@@ -123,10 +123,10 @@ h3,
 @keyframes pulse-gold {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(198, 161, 91, 0.35);
+    box-shadow: 0 0 0 0 rgba(30, 75, 184, 0.35);
   }
   50% {
-    box-shadow: 0 0 0 8px rgba(198, 161, 91, 0);
+    box-shadow: 0 0 0 8px rgba(30, 75, 184, 0);
   }
 }
 
@@ -209,4 +209,18 @@ h3,
 
 [data-theme="light"] .text-\[\#f2ede3\] {
   color: var(--text) !important;
+}
+
+[data-theme="light"] .bg-\[\#c6a15b\],
+[data-theme="light"] .bg-\[\#c6a15b\]\/20 {
+  background-color: var(--gold) !important;
+}
+
+[data-theme="light"] .text-\[\#c6a15b\],
+[data-theme="light"] .text-\[\#000000\] {
+  color: #ffffff !important;
+}
+
+[data-theme="light"] button.bg-\[\#c6a15b\] {
+  color: #ffffff !important;
 }

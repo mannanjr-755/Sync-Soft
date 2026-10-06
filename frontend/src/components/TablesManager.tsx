@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { ExternalLink } from "lucide-react";
 import { toast } from "@/components/ToastProvider";
 
 type TableRow = {
@@ -10,7 +11,7 @@ type TableRow = {
   active: boolean;
 };
 
-const CUSTOMER_MENU_URL = "https://dehlidarbardigitalmenu.vercel.app";
+const CUSTOMER_MENU_URL = "https://sync-digital-menu.vercel.app";
 
 export function TablesManager() {
   const [tables, setTables] = useState<TableRow[]>([]);
@@ -57,11 +58,23 @@ export function TablesManager() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold tracking-tight text-white">Tables</h1>
-      <p className="mt-1 text-sm text-[#a39b8c]">
-        Each table has a URL for NFC cards and QR codes. The card only stores this URL — not the
-        menu.
-      </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-[var(--text)]">Tables</h1>
+          <p className="mt-1 text-sm text-[var(--text-muted)]">
+            Each table has a URL for NFC cards and QR codes. Linked to the Sync digital menu.
+          </p>
+        </div>
+        <a
+          href={CUSTOMER_MENU_URL}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-2 rounded-xl border border-[var(--gold)]/30 bg-[var(--gold)] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--gold-bright)]"
+        >
+          Open Sync Digital Menu
+          <ExternalLink className="h-4 w-4" />
+        </a>
+      </div>
 
       <form onSubmit={createTable} className="mt-6 flex flex-wrap gap-2">
         <input
@@ -71,19 +84,19 @@ export function TablesManager() {
           value={tableNumber}
           onChange={(e) => setTableNumber(e.target.value)}
           placeholder="Table number"
-          className="w-40 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-[#c6a15b]"
+          className="input-theme w-40 rounded-xl px-3 py-2 text-sm outline-none focus:border-[var(--gold)]"
         />
         <button
           type="submit"
-          className="rounded-xl bg-[#c6a15b] px-4 py-2 text-sm font-semibold text-[#000000]"
+          className="rounded-xl bg-[var(--gold)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--gold-bright)]"
         >
           Create table
         </button>
       </form>
 
-      <div className="mt-6 overflow-x-auto rounded-2xl border border-white/10">
+      <div className="mt-6 overflow-x-auto rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] shadow-[var(--shadow)]">
         <table className="w-full min-w-[480px] text-left text-sm">
-          <thead className="border-b border-white/10 bg-white/[0.03] text-[#a39b8c]">
+          <thead className="border-b border-[var(--border)] bg-[var(--bg-soft)] text-[var(--text-muted)]">
             <tr>
               <th className="px-4 py-3 font-medium">Table</th>
               <th className="px-4 py-3 font-medium">Customer URL (NFC / QR)</th>
@@ -92,19 +105,19 @@ export function TablesManager() {
           </thead>
           <tbody>
             {tables.map((t) => (
-              <tr key={t.id} className="border-b border-white/5">
-                <td className="px-4 py-3 font-medium text-white">{t.tableNumber}</td>
+              <tr key={t.id} className="border-b border-[var(--border)]">
+                <td className="px-4 py-3 font-medium text-[var(--text)]">{t.tableNumber}</td>
                 <td className="px-4 py-3">
                   <a
                     href={tableUrl(t.tableNumber)}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-[#ddbe7e] underline-offset-2 hover:underline"
+                    className="text-[var(--gold-bright)] underline-offset-2 hover:underline"
                   >
                     {tableUrl(t.tableNumber)}
                   </a>
                 </td>
-                <td className="px-4 py-3 font-mono text-xs text-[#a39b8c]">{t.uniqueCode}</td>
+                <td className="px-4 py-3 font-mono text-xs text-[var(--text-muted)]">{t.uniqueCode}</td>
               </tr>
             ))}
           </tbody>
