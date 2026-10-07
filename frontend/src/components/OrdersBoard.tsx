@@ -646,42 +646,42 @@ export function OrdersBoard() {
 
       {/* Premium dashboard hero */}
       <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] shadow-[var(--shadow)]">
-        <div className="grid lg:grid-cols-[1.15fr_0.85fr]">
-          <div className="flex flex-col justify-between gap-6 p-5 sm:p-7">
+        <div className="grid lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+          <div className="flex flex-col justify-center gap-5 p-5 sm:p-6 lg:p-7">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--gold)]">
                 Operations
               </p>
-              <h1 className="mt-2 text-2xl font-semibold tracking-tight text-[var(--text)] sm:text-3xl">
+              <h1 className="mt-2 text-[1.65rem] font-semibold tracking-tight text-[var(--text)] sm:text-3xl">
                 Kitchen command center
               </h1>
-              <p className="mt-2 max-w-xl text-sm leading-relaxed text-[var(--text-muted)]">
+              <p className="mt-2 max-w-lg text-sm leading-relaxed text-[var(--text-muted)]">
                 Track live orders, keep service moving, and manage the floor from one clean workspace.
                 {lastFetch ? ` Synced ${format(new Date(lastFetch), "HH:mm:ss")}.` : ""}
               </p>
             </div>
 
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
               <button
                 type="button"
                 onClick={() => {
                   setSearchOpen((v) => !v);
                   if (searchOpen) setSearch("");
                 }}
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--bg-soft)] px-3 py-2.5 text-sm text-[var(--text-muted)] sm:hidden"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--bg-soft)] px-3 py-2.5 text-sm font-medium text-[var(--text-muted)] transition hover:border-[var(--gold)]/30 hover:text-[var(--text)] sm:hidden"
               >
                 <Search className="h-4 w-4" />
                 Search
               </button>
-              <div ref={searchRef} className={`relative flex-1 ${searchOpen ? "block" : "hidden sm:block"}`}>
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-dim)]" />
+              <div ref={searchRef} className={`relative min-w-0 flex-1 ${searchOpen ? "block" : "hidden sm:block"}`}>
+                <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-dim)]" />
                 <input
                   autoFocus={searchOpen}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   onFocus={() => setSearchOpen(true)}
                   placeholder="Search orders, tables, menu…"
-                  className="input-theme w-full rounded-xl py-2.5 pl-10 pr-16 text-sm outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]/25"
+                  className="w-full rounded-xl border border-[var(--border)] bg-[var(--bg-soft)] py-2.5 pl-10 pr-16 text-sm text-[var(--text)] outline-none transition placeholder:text-[var(--text-dim)] focus:border-[var(--gold)] focus:bg-[var(--bg-card)] focus:ring-2 focus:ring-[var(--gold)]/15"
                 />
                 {search.trim() && (
                   <button
@@ -755,22 +755,22 @@ export function OrdersBoard() {
                   </div>
                 )}
               </div>
-              <div className="hidden shrink-0 rounded-xl border border-[var(--border)] bg-[var(--bg-soft)] px-3 py-2.5 text-xs font-medium text-[var(--text-muted)] md:block">
+              <div className="hidden shrink-0 items-center rounded-full border border-[var(--border)] bg-[var(--bg-soft)] px-3.5 py-2.5 text-xs font-medium text-[var(--text-muted)] md:inline-flex">
                 {format(new Date(), "dd MMM yyyy · EEEE")}
               </div>
             </div>
           </div>
 
-          <div className="relative min-h-[180px] border-t border-[var(--border)] lg:min-h-full lg:border-l lg:border-t-0">
+          <div className="relative min-h-[200px] sm:min-h-[220px] lg:min-h-[260px]">
             <Image
               src="/images/dashboard-hero.jpg"
-              alt="Sync kitchen operations workspace"
+              alt="Fresh latte in a premium cafe setting"
               fill
               priority
-              sizes="(max-width: 1024px) 100vw, 42vw"
+              sizes="(max-width: 1024px) 100vw, 46vw"
               className="object-cover object-center"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[var(--gold-dim)]/35 via-transparent to-transparent lg:bg-gradient-to-l lg:from-transparent lg:via-transparent lg:to-[var(--bg-card)]/20" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[var(--gold-dim)]/25 via-transparent to-transparent lg:bg-gradient-to-l lg:from-transparent lg:via-transparent lg:to-[var(--bg-card)]/40" />
           </div>
         </div>
       </section>

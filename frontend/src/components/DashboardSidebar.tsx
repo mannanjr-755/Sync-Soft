@@ -97,14 +97,14 @@ export function DashboardSidebar({
     <aside
       className={`hidden shrink-0 flex-col border-r border-[var(--border)] bg-[var(--bg-sidebar)] lg:flex ${
         ready ? "transition-[width] duration-200 ease-out" : ""
-      } ${collapsed ? "w-[72px]" : "w-[248px]"}`}
+      } ${collapsed ? "w-[76px]" : "w-[252px]"}`}
     >
       <div
-        className={`flex items-center border-b border-[var(--border)] py-4 ${
-          collapsed ? "flex-col gap-2 px-2" : "gap-3 px-3"
+        className={`flex items-center border-b border-[var(--border)] py-3.5 ${
+          collapsed ? "flex-col gap-2 px-2" : "gap-3 px-3.5"
         }`}
       >
-        <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl border border-[var(--gold)]/20 shadow-[var(--shadow)]">
+        <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl border border-[var(--gold)]/20 bg-[var(--bg-card)] shadow-[var(--shadow)]">
           <Image
             src="/logo.png"
             alt="Sync"
@@ -119,7 +119,7 @@ export function DashboardSidebar({
             <p className="truncate text-[15px] font-semibold leading-tight tracking-tight text-[var(--text)]">
               {restaurantName}
             </p>
-            <p className="mt-0.5 text-[10px] font-medium uppercase tracking-[0.16em] text-[var(--text-dim)]">
+            <p className="mt-0.5 text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--text-dim)]">
               Sync Dashboard
             </p>
           </div>
@@ -129,7 +129,7 @@ export function DashboardSidebar({
           onClick={toggleCollapsed}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-muted)] transition hover:border-[var(--gold)]/40 hover:text-[var(--gold-bright)]"
+          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-muted)] transition hover:border-[var(--gold)]/35 hover:text-[var(--gold)]"
         >
           {collapsed ? (
             <PanelLeftOpen className="h-4 w-4" />
@@ -140,8 +140,8 @@ export function DashboardSidebar({
       </div>
 
       <nav
-        className={`flex-1 space-y-0.5 overflow-y-auto overflow-x-hidden py-3 ${
-          collapsed ? "px-1.5" : "px-2.5"
+        className={`flex-1 space-y-1 overflow-y-auto overflow-x-hidden py-3 ${
+          collapsed ? "px-2" : "px-3"
         }`}
       >
         {nav.map((item) => {
@@ -153,49 +153,49 @@ export function DashboardSidebar({
               key={item.key}
               href={item.href}
               title={collapsed ? item.label : undefined}
-              className={`relative flex items-center rounded-xl text-[13px] font-medium transition ${
+              className={`group relative flex items-center rounded-xl text-[13px] font-medium transition-colors ${
                 collapsed ? "justify-center px-2 py-2.5" : "gap-3 px-3 py-2.5"
               } ${
                 isActive
-                  ? "bg-[var(--gold)]/10 text-[var(--gold)] shadow-[inset_3px_0_0_0_var(--gold)]"
+                  ? "bg-[var(--gold)] text-white shadow-[var(--shadow)]"
                   : "text-[var(--text-muted)] hover:bg-[var(--bg-soft)] hover:text-[var(--text)]"
               }`}
             >
-              <Icon className="h-4 w-4 shrink-0" strokeWidth={isActive ? 2.25 : 1.75} />
+              <Icon
+                className={`h-4 w-4 shrink-0 ${isActive ? "text-white" : "text-[var(--text-dim)] group-hover:text-[var(--gold)]"}`}
+                strokeWidth={isActive ? 2.25 : 1.85}
+              />
               {!collapsed && <span className="truncate leading-none">{item.label}</span>}
             </Link>
           );
         })}
       </nav>
 
-      {/* Compact promo visual — sits above the fold edge, does not replace Settings */}
-      <div className={`shrink-0 border-t border-[var(--border)] ${collapsed ? "p-1.5" : "p-3"}`}>
+      <div className={`shrink-0 border-t border-[var(--border)] ${collapsed ? "p-2" : "p-3"}`}>
         {collapsed ? (
-          <div className="relative mx-auto h-10 w-10 overflow-hidden rounded-xl border border-[var(--border)] shadow-[var(--shadow)]">
+          <div className="relative mx-auto h-11 w-11 overflow-hidden rounded-xl border border-[var(--border)] shadow-[var(--shadow)]">
             <Image
               src="/images/sidebar-promo.jpg"
               alt=""
-              width={40}
-              height={40}
+              width={44}
+              height={44}
               className="h-full w-full object-cover"
             />
           </div>
         ) : (
           <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] shadow-[var(--shadow)]">
-            <div className="relative h-[88px] w-full">
+            <div className="relative h-[96px] w-full">
               <Image
                 src="/images/sidebar-promo.jpg"
-                alt="Sync workspace"
+                alt="Premium cafe espresso"
                 fill
                 sizes="220px"
-                className="object-cover"
+                className="object-cover object-center"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[var(--gold-dim)]/85 via-[var(--gold)]/25 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0f172a]/88 via-[#0f172a]/35 to-transparent" />
               <div className="absolute inset-x-0 bottom-0 p-2.5">
-                <p className="text-[11px] font-semibold tracking-tight text-white">Sync Ops</p>
-                <p className="text-[10px] leading-snug text-white/80">
-                  Live kitchen &amp; table flow
-                </p>
+                <p className="text-[11px] font-semibold tracking-tight text-white">Cafe floor ready</p>
+                <p className="text-[10px] leading-snug text-white/75">Tables · menu · live service</p>
               </div>
             </div>
           </div>
@@ -207,15 +207,15 @@ export function DashboardSidebar({
 
 export function DashboardMobileNav({ active }: { active: NavKey }) {
   return (
-    <nav className="flex gap-1 overflow-x-auto border-b border-[var(--border)] px-3 py-2 lg:hidden">
+    <nav className="flex gap-1.5 overflow-x-auto border-b border-[var(--border)] px-3 py-2 lg:hidden">
       {nav.map((item) => (
         <Link
           key={item.key}
           href={item.href}
-          className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium ${
+          className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium transition ${
             isNavActive(active, item.key)
-              ? "bg-[var(--gold)]/10 text-[var(--gold)]"
-              : "text-[var(--text-muted)]"
+              ? "bg-[var(--gold)] text-white"
+              : "text-[var(--text-muted)] hover:bg-[var(--bg-soft)]"
           }`}
         >
           {item.label}
