@@ -70,7 +70,7 @@ export async function DashboardShell({
               height={32}
               className="h-8 w-8 shrink-0 rounded-lg border border-[var(--gold)]/30 object-contain"
             />
-            <span className="truncate font-display text-sm text-[var(--gold-bright)]">
+            <span className="truncate text-sm font-semibold tracking-tight text-[var(--gold)]">
               {restaurantName}
             </span>
           </div>

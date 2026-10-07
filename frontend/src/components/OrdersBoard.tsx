@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { format } from "date-fns";
-import { Pencil, Printer, Search } from "lucide-react";
+import Image from "next/image";
+import { ClipboardList, CookingPot, BellRing, CircleCheck, Pencil, Printer, Search } from "lucide-react";
 import { printOrderReceipt, maybeAutoPrintCompletedOrder, type BillingOptions, type ReceiptRestaurant } from "@/lib/printReceipt";
 import { PrintBillingDialog } from "@/components/PrintBillingDialog";
 import { toast } from "@/components/ToastProvider";
@@ -181,11 +182,6 @@ export function OrdersBoard() {
     return map;
   }, [todayOrders]);
 
-  const revenue = useMemo(
-    () => todayOrders.reduce((sum, o) => sum + o.total, 0),
-    [todayOrders]
-  );
-
   const filtered = useMemo(() => {
     let list = orders;
     if (orderTypeFilter !== "ALL") {
@@ -216,42 +212,6 @@ export function OrdersBoard() {
     const matchedMenu = allMenuItems.filter((i) => i.name.toLowerCase().includes(searchQ)).slice(0, 5);
     return { orders: matchedOrders, tables: matchedTables, menu: matchedMenu, totalMatches: matchedOrders.length + matchedTables.length + matchedMenu.length };
   }, [filtered, tables, menuCategories, searchQ]);
-
-  const topItems = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const o of todayOrders) {
-      for (const item of o.items) {
-        map.set(item.itemName, (map.get(item.itemName) ?? 0) + item.quantity);
-      }
-    }
-    return [...map.entries()]
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5);
-  }, [todayOrders]);
-
-  const recentActivity = useMemo(() => {
-    return [...orders]
-      .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt))
-      .slice(0, 6)
-      .map((o) => ({
-        id: o.id,
-        text:
-          o.status === "NEW"
-            ? `New order ${o.orderNumber} received`
-            : o.status === "READY"
-              ? `Order ${o.orderNumber} is ready to serve`
-              : `Order ${o.orderNumber} → ${STATUS_LABELS[o.status as OrderStatus] ?? o.status}`,
-        time: format(new Date(o.createdAt), "HH:mm"),
-        tone:
-          o.status === "NEW"
-            ? "bg-[#ef4444]"
-            : o.status === "READY"
-              ? "bg-[#22c55e]"
-              : o.status === "PREPARING"
-                ? "bg-[#f97316]"
-                : "bg-[#3b82f6]",
-      }));
-  }, [orders]);
 
   async function advanceStatus(orderId: string, status: string) {
     if (status === "COMPLETED" || status === "REPORTED") return;
@@ -427,52 +387,32 @@ export function OrdersBoard() {
     }
   }
 
-  const kpi = [
+  const liveStats = [
     {
-      label: "Total Orders",
+      label: "Today's orders",
       value: String(todayOrders.length),
-      icon: "📋",
-      tone: "text-[#ddbe7e] bg-[#c6a15b]/15",
-      trend: "↑ 25% from yesterday",
+      icon: ClipboardList,
+      tone: "text-[var(--gold)] bg-[var(--gold)]/10",
     },
     {
       label: "Preparing",
       value: String(counts.PREPARING ?? 0),
-      icon: "🍲",
-      tone: "text-[#22c55e] bg-[#22c55e]/15",
-      sub: "In Kitchen",
+      icon: CookingPot,
+      tone: "text-[#ea580c] bg-[#ea580c]/10",
     },
     {
       label: "Ready",
       value: String(counts.READY ?? 0),
-      icon: "🔔",
-      tone: "text-[#3b82f6] bg-[#3b82f6]/15",
-      sub: "To Be Served",
+      icon: BellRing,
+      tone: "text-[#2563eb] bg-[#2563eb]/10",
     },
     {
       label: "Completed",
       value: String(counts.COMPLETED ?? 0),
-      icon: "✅",
-      tone: "text-[#a855f7] bg-[#a855f7]/15",
-      trend: "↑ 18% from yesterday",
+      icon: CircleCheck,
+      tone: "text-[#16a34a] bg-[#16a34a]/10",
     },
   ];
-
-  const newBucket = (counts.NEW ?? 0) + (counts.ACCEPTED ?? 0);
-  const preparingCount = counts.PREPARING ?? 0;
-  const readyCount = counts.READY ?? 0;
-  const completedCount = counts.COMPLETED ?? 0;
-  const donutTotal = newBucket + preparingCount + readyCount + completedCount || 1;
-
-  const occupiedEstimate = Math.min(
-    tables.length,
-    new Set(
-      orders
-        .filter((o) => !["COMPLETED"].includes(o.status))
-        .map((o) => o.table.tableNumber)
-    ).size
-  );
-  const available = Math.max(0, tables.length - occupiedEstimate);
 
   return (
     <div className="space-y-6">
@@ -704,150 +644,167 @@ export function OrdersBoard() {
         </div>
       )}
 
-      {/* Top header */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="font-display text-2xl text-[var(--text)] sm:text-3xl">Dashboard</h1>
-          <p className="text-sm text-[var(--text-muted)]">
-            Live kitchen board
-            {lastFetch ? ` · synced ${format(new Date(lastFetch), "HH:mm:ss")}` : ""}
-          </p>
-        </div>
-        <div className="flex flex-1 items-center justify-end gap-3 sm:max-w-xl">
-          {/* Mobile search toggle */}
-          <button
-            type="button"
-            onClick={() => { setSearchOpen((v) => !v); if (searchOpen) setSearch(""); }}
-            className="rounded-full border border-[#2e3b47] p-2.5 text-[#b9b2a5] sm:hidden"
-          >
-            <Search className="h-5 w-5" />
-          </button>
-          {/* Search input — always visible on sm+, toggleable on mobile */}
-          <div ref={searchRef} className={`relative flex-1 sm:block ${searchOpen ? "block" : "hidden"}`}>
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#666]" />
-            <input
-              autoFocus={searchOpen}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onFocus={() => setSearchOpen(true)}
-              placeholder="Search orders, tables, menu..."
-              className="w-full rounded-full border border-[#2e3b47] bg-[#1a2530] py-2.5 pl-10 pr-4 text-sm outline-none focus:border-[#c6a15b]"
-            />
-            {search.trim() && (
+      {/* Premium dashboard hero */}
+      <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] shadow-[var(--shadow)]">
+        <div className="grid lg:grid-cols-[1.15fr_0.85fr]">
+          <div className="flex flex-col justify-between gap-6 p-5 sm:p-7">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--gold)]">
+                Operations
+              </p>
+              <h1 className="mt-2 text-2xl font-semibold tracking-tight text-[var(--text)] sm:text-3xl">
+                Kitchen command center
+              </h1>
+              <p className="mt-2 max-w-xl text-sm leading-relaxed text-[var(--text-muted)]">
+                Track live orders, keep service moving, and manage the floor from one clean workspace.
+                {lastFetch ? ` Synced ${format(new Date(lastFetch), "HH:mm:ss")}.` : ""}
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
               <button
                 type="button"
-                onClick={() => setSearch("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold uppercase text-[#b9b2a5] hover:text-white"
+                onClick={() => {
+                  setSearchOpen((v) => !v);
+                  if (searchOpen) setSearch("");
+                }}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--bg-soft)] px-3 py-2.5 text-sm text-[var(--text-muted)] sm:hidden"
               >
-                Clear
+                <Search className="h-4 w-4" />
+                Search
               </button>
-            )}
-            {/* Search results dropdown */}
-            {searchResults && searchResults.totalMatches > 0 && (
-              <div className="absolute left-0 right-0 top-full z-30 mt-2 max-h-[70vh] overflow-y-auto rounded-2xl border border-[#2e3b47] bg-[#1a2530] p-3 shadow-2xl shadow-black/60">
-                {/* Orders */}
-                {searchResults.orders.length > 0 && (
-                  <div className="mb-3">
-                    <p className="mb-1.5 px-1 text-[10px] font-bold uppercase tracking-wider text-[#ddbe7e]">
-                      Orders ({searchResults.orders.length})
-                    </p>
-                    {searchResults.orders.map((o) => (
-                      <div key={o.id} className="flex items-center justify-between rounded-lg px-2 py-1.5 transition hover:bg-white/5">
-                        <div className="min-w-0">
-                          <p className="truncate text-sm text-white">{o.orderNumber}</p>
-                          <p className="truncate text-[11px] text-[#b9b2a5]">
-                            {o.customerName === "Walking Customer"
-                              ? o.customerName
-                              : `${o.customerName} · Table ${o.table.tableNumber}`}
-                          </p>
-                        </div>
-                        <span className="shrink-0 rounded-full bg-white/5 px-2 py-0.5 text-[10px] text-[#b9b2a5]">
-                          {STATUS_LABELS[o.status as OrderStatus] ?? o.status}
-                        </span>
+              <div ref={searchRef} className={`relative flex-1 ${searchOpen ? "block" : "hidden sm:block"}`}>
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-dim)]" />
+                <input
+                  autoFocus={searchOpen}
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  onFocus={() => setSearchOpen(true)}
+                  placeholder="Search orders, tables, menu…"
+                  className="input-theme w-full rounded-xl py-2.5 pl-10 pr-16 text-sm outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]/25"
+                />
+                {search.trim() && (
+                  <button
+                    type="button"
+                    onClick={() => setSearch("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-dim)] hover:text-[var(--text)]"
+                  >
+                    Clear
+                  </button>
+                )}
+                {searchResults && searchResults.totalMatches > 0 && (
+                  <div className="absolute left-0 right-0 top-full z-30 mt-2 max-h-[70vh] overflow-y-auto rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] p-3 shadow-[var(--shadow)]">
+                    {searchResults.orders.length > 0 && (
+                      <div className="mb-3">
+                        <p className="mb-1.5 px-1 text-[10px] font-bold uppercase tracking-wider text-[var(--gold)]">
+                          Orders ({searchResults.orders.length})
+                        </p>
+                        {searchResults.orders.map((o) => (
+                          <div key={o.id} className="flex items-center justify-between rounded-lg px-2 py-1.5 transition hover:bg-[var(--bg-soft)]">
+                            <div className="min-w-0">
+                              <p className="truncate text-sm text-[var(--text)]">{o.orderNumber}</p>
+                              <p className="truncate text-[11px] text-[var(--text-muted)]">
+                                {o.customerName === "Walking Customer"
+                                  ? o.customerName
+                                  : `${o.customerName} · Table ${o.table.tableNumber}`}
+                              </p>
+                            </div>
+                            <span className="shrink-0 rounded-full bg-[var(--bg-soft)] px-2 py-0.5 text-[10px] text-[var(--text-muted)]">
+                              {STATUS_LABELS[o.status as OrderStatus] ?? o.status}
+                            </span>
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    )}
+                    {searchResults.tables.length > 0 && (
+                      <div className="mb-3">
+                        <p className="mb-1.5 px-1 text-[10px] font-bold uppercase tracking-wider text-[var(--info)]">
+                          Tables ({searchResults.tables.length})
+                        </p>
+                        {searchResults.tables.map((t) => (
+                          <div key={t.id} className="flex items-center justify-between rounded-lg px-2 py-1.5 transition hover:bg-[var(--bg-soft)]">
+                            <p className="text-sm text-[var(--text)]">Table {t.tableNumber}</p>
+                            <span className={`text-[11px] font-medium ${t.active ? "text-[var(--success)]" : "text-[var(--danger)]"}`}>
+                              {t.active ? "Active" : "Inactive"}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {searchResults.menu.length > 0 && (
+                      <div>
+                        <p className="mb-1.5 px-1 text-[10px] font-bold uppercase tracking-wider text-[var(--success)]">
+                          Menu ({searchResults.menu.length})
+                        </p>
+                        {searchResults.menu.map((i) => (
+                          <div key={i.id} className="flex items-center justify-between rounded-lg px-2 py-1.5 transition hover:bg-[var(--bg-soft)]">
+                            <div className="min-w-0">
+                              <p className="truncate text-sm text-[var(--text)]">{i.name}</p>
+                              <p className="truncate text-[11px] text-[var(--text-muted)]">{i.categoryName}</p>
+                            </div>
+                            <span className="shrink-0 text-xs font-semibold text-[var(--gold-bright)]">{formatMoney(i.price)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
-                {/* Tables */}
-                {searchResults.tables.length > 0 && (
-                  <div className="mb-3">
-                    <p className="mb-1.5 px-1 text-[10px] font-bold uppercase tracking-wider text-[#3b82f6]">
-                      Tables ({searchResults.tables.length})
-                    </p>
-                    {searchResults.tables.map((t) => (
-                      <div key={t.id} className="flex items-center justify-between rounded-lg px-2 py-1.5 transition hover:bg-white/5">
-                        <p className="text-sm text-white">Table {t.tableNumber}</p>
-                        <span className={`text-[11px] font-medium ${t.active ? "text-[#22c55e]" : "text-[#ef4444]"}`}>
-                          {t.active ? "Active" : "Inactive"}
-                        </span>
-                      </div>
-                    ))}
+                {searchResults && searchResults.totalMatches === 0 && (
+                  <div className="absolute left-0 right-0 top-full z-30 mt-2 rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] p-5 text-center shadow-[var(--shadow)]">
+                    <p className="text-sm text-[var(--text-muted)]">No results found for &ldquo;{search}&rdquo;</p>
                   </div>
                 )}
-                {/* Menu items */}
-                {searchResults.menu.length > 0 && (
-                  <div>
-                    <p className="mb-1.5 px-1 text-[10px] font-bold uppercase tracking-wider text-[#22c55e]">
-                      Menu ({searchResults.menu.length})
-                    </p>
-                    {searchResults.menu.map((i) => (
-                      <div key={i.id} className="flex items-center justify-between rounded-lg px-2 py-1.5 transition hover:bg-white/5">
-                        <div className="min-w-0">
-                          <p className="truncate text-sm text-white">{i.name}</p>
-                          <p className="truncate text-[11px] text-[#b9b2a5]">{i.categoryName}</p>
-                        </div>
-                        <span className="shrink-0 text-xs font-semibold text-[#ead498]">{formatMoney(i.price)}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {/* No matches for specific sections hidden */}
               </div>
-            )}
-            {/* No results */}
-            {searchResults && searchResults.totalMatches === 0 && (
-              <div className="absolute left-0 right-0 top-full z-30 mt-2 rounded-2xl border border-[#2e3b47] bg-[#1a2530] p-5 text-center shadow-2xl shadow-black/60">
-                <p className="text-sm text-[#8a8478]">No results found for &ldquo;{search}&rdquo;</p>
+              <div className="hidden shrink-0 rounded-xl border border-[var(--border)] bg-[var(--bg-soft)] px-3 py-2.5 text-xs font-medium text-[var(--text-muted)] md:block">
+                {format(new Date(), "dd MMM yyyy · EEEE")}
               </div>
-            )}
-          </div>
-          <div className="hidden rounded-xl border border-[var(--border)] bg-[var(--bg-card)] px-3 py-2 text-xs text-[var(--text-muted)] md:block">
-            {format(new Date(), "dd MMM, yyyy EEEE")}
-          </div>
-        </div>
-      </div>
-
-      {/* KPI cards */}
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {kpi.map((card) => (
-          <div
-            key={card.label}
-            className="rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] p-4"
-          >
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-xs text-[var(--text-muted)]">{card.label}</p>
-                <p className="mt-1 text-2xl font-semibold text-[var(--text)]">{card.value}</p>
-                {card.trend && <p className="mt-1 text-xs text-[#22c55e]">{card.trend}</p>}
-                {"sub" in card && card.sub && (
-                  <p className="mt-1 text-xs text-[#888]">{card.sub}</p>
-                )}
-              </div>
-              <span className={`flex h-11 w-11 items-center justify-center rounded-full text-lg ${card.tone}`}>
-                {card.icon}
-              </span>
             </div>
           </div>
-        ))}
+
+          <div className="relative min-h-[180px] border-t border-[var(--border)] lg:min-h-full lg:border-l lg:border-t-0">
+            <Image
+              src="/images/dashboard-hero.jpg"
+              alt="Sync kitchen operations workspace"
+              fill
+              priority
+              sizes="(max-width: 1024px) 100vw, 42vw"
+              className="object-cover object-center"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[var(--gold-dim)]/35 via-transparent to-transparent lg:bg-gradient-to-l lg:from-transparent lg:via-transparent lg:to-[var(--bg-card)]/20" />
+          </div>
+        </div>
+      </section>
+
+      {/* Live status — real counts only */}
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {liveStats.map((card) => {
+          const Icon = card.icon;
+          return (
+            <div
+              key={card.label}
+              className="rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] p-4 shadow-[var(--shadow)]"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-xs font-medium text-[var(--text-muted)]">{card.label}</p>
+                  <p className="mt-1 text-2xl font-semibold tracking-tight text-[var(--text)]">{card.value}</p>
+                </div>
+                <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${card.tone}`}>
+                  <Icon className="h-4 w-4" strokeWidth={2} />
+                </span>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {/* Kitchen board — horizontal order cards per status */}
-      <section className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4">
+      <section className="rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] p-4 shadow-[var(--shadow)] sm:p-5">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
             <div>
-              <h2 className="font-display text-xl text-[var(--text)]">Kitchen Orders</h2>
+              <h2 className="text-lg font-semibold tracking-tight text-[var(--text)]">Kitchen Orders</h2>
               <p className="mt-0.5 text-xs text-[var(--text-muted)]">
-                POS-ready board — edit items, advance status, and keep service in sync
+                Edit items, advance status, and keep service in sync
               </p>
             </div>
             <div className="flex gap-2 text-xs">
@@ -1065,133 +1022,6 @@ export function OrdersBoard() {
             })}
           </div>
         </section>
-
-      {/* Overview widgets moved to bottom */}
-      <div className="grid gap-4 lg:grid-cols-3">
-          <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] p-4">
-            <h3 className="font-medium text-[var(--text)]">Today&apos;s Overview</h3>
-            <div className="mt-4 flex items-center gap-4">
-              <div
-                className="relative h-28 w-28 shrink-0 rounded-full"
-                style={{
-                  background: `conic-gradient(
-                    #ef4444 0 ${(newBucket / donutTotal) * 100}%,
-                    #f97316 ${(newBucket / donutTotal) * 100}% ${((newBucket + preparingCount) / donutTotal) * 100}%,
-                    #22c55e ${((newBucket + preparingCount) / donutTotal) * 100}% ${((newBucket + preparingCount + readyCount) / donutTotal) * 100}%,
-                    #3b82f6 ${((newBucket + preparingCount + readyCount) / donutTotal) * 100}% 100%
-                  )`,
-                }}
-              >
-                <div className="absolute inset-3 flex items-center justify-center rounded-full bg-[var(--bg-card)] text-center">
-                  <div>
-                    <p className="text-lg font-bold">{todayOrders.length}</p>
-                    <p className="text-[9px] text-[var(--text-dim)]">Orders</p>
-                  </div>
-                </div>
-              </div>
-              <ul className="space-y-1.5 text-xs">
-                <li className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-[#ef4444]" /> New {newBucket}</li>
-                <li className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-[#f97316]" /> Preparing {preparingCount}</li>
-                <li className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-[#22c55e]" /> Ready {readyCount}</li>
-                <li className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-[#3b82f6]" /> Completed {completedCount}</li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] p-4">
-            <h3 className="font-medium text-[var(--text)]">Revenue Overview</h3>
-            <p className="mt-1 text-xs text-[var(--success)]">+22% from yesterday</p>
-            <div className="mt-4 flex h-24 items-end gap-1">
-              {[40, 55, 35, 70, 60, 85, 50, 95, 75, 65, 80, 90].map((h, i) => (
-                <div
-                  key={i}
-                  className="flex-1 rounded-t bg-gradient-to-t from-[var(--gold)]/30 to-[var(--gold-bright)]"
-                  style={{ height: `${h}%` }}
-                />
-              ))}
-            </div>
-            <p className="mt-2 text-right text-sm font-semibold text-[var(--gold-bright)]">{formatMoney(revenue)}</p>
-          </div>
-
-          <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] p-4">
-            <h3 className="font-medium text-[var(--text)]">Top Selling Items</h3>
-            <ul className="mt-3 space-y-3">
-              {topItems.length === 0 && (
-                <li className="text-xs text-[var(--text-dim)]">No sales yet today.</li>
-              )}
-              {topItems.map(([name, qty], idx) => (
-                <li key={name} className="flex items-center gap-3 text-sm">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--gold)]/15 text-xs font-bold text-[var(--gold-bright)]">
-                    {idx + 1}
-                  </span>
-                  <span className="flex-1 truncate text-[var(--text)]">{name}</span>
-                  <span className="text-xs text-[var(--text-muted)]">{qty} sold</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-      </div>
-
-      {/* Bottom panels */}
-      <div className="grid gap-4 lg:grid-cols-3">
-        <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] p-4">
-          <h3 className="font-medium text-[var(--text)]">Table Status</h3>
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            {[
-              { label: "Available", value: available, color: "text-[#22c55e] border-[#22c55e]/30" },
-              { label: "Occupied", value: occupiedEstimate, color: "text-[#f97316] border-[#f97316]/30" },
-              { label: "Reserved", value: 0, color: "text-[#ef4444] border-[#ef4444]/30" },
-              { label: "Total", value: tables.length, color: "text-[#3b82f6] border-[#3b82f6]/30" },
-            ].map((t) => (
-              <div key={t.label} className={`rounded-xl border bg-[var(--bg-elevated)] p-3 ${t.color}`}>
-                <p className="text-2xl font-bold">{t.value}</p>
-                <p className="text-xs text-[var(--text-muted)]">{t.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] p-4">
-          <h3 className="font-medium text-[var(--text)]">Recent Activity</h3>
-          <ul className="mt-3 space-y-3">
-            {recentActivity.length === 0 && (
-              <li className="text-xs text-[var(--text-dim)]">No recent activity.</li>
-            )}
-            {recentActivity.map((a) => (
-              <li key={a.id} className="flex items-start gap-3 text-xs">
-                <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${a.tone}`} />
-                <div className="min-w-0 flex-1">
-                  <p className="text-[var(--text)]">{a.text}</p>
-                  <p className="text-[var(--text-dim)]">{a.time}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] p-4">
-          <h3 className="font-medium text-[var(--text)]">Staff on Duty</h3>
-          <ul className="mt-3 space-y-3">
-            {[
-              { name: "Ali Khan", role: "Head Chef", initial: "A" },
-              { name: "Sara Ahmed", role: "Kitchen Staff", initial: "S" },
-              { name: "Imran Raza", role: "Waiter", initial: "I" },
-              { name: "Usman Javed", role: "Cashier", initial: "U" },
-            ].map((s) => (
-              <li key={s.name} className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--gold)]/20 text-sm font-bold text-[var(--gold-bright)]">
-                  {s.initial}
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm text-[var(--text)]">{s.name}</p>
-                  <p className="text-xs text-[var(--text-dim)]">{s.role}</p>
-                </div>
-                <span className="text-[10px] font-semibold text-[var(--success)]">● Online</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
     </div>
   );
 }

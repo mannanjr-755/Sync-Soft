@@ -97,14 +97,14 @@ export function DashboardSidebar({
     <aside
       className={`hidden shrink-0 flex-col border-r border-[var(--border)] bg-[var(--bg-sidebar)] lg:flex ${
         ready ? "transition-[width] duration-200 ease-out" : ""
-      } ${collapsed ? "w-[72px]" : "w-[240px]"}`}
+      } ${collapsed ? "w-[72px]" : "w-[248px]"}`}
     >
       <div
         className={`flex items-center border-b border-[var(--border)] py-4 ${
           collapsed ? "flex-col gap-2 px-2" : "gap-3 px-3"
         }`}
       >
-        <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl border border-[var(--gold)]/30 shadow-[var(--shadow)]">
+        <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl border border-[var(--gold)]/20 shadow-[var(--shadow)]">
           <Image
             src="/logo.png"
             alt="Sync"
@@ -116,10 +116,10 @@ export function DashboardSidebar({
         </div>
         {!collapsed && (
           <div className="min-w-0 flex-1">
-            <p className="truncate font-display text-lg leading-tight text-[var(--gold-bright)]">
+            <p className="truncate text-[15px] font-semibold leading-tight tracking-tight text-[var(--text)]">
               {restaurantName}
             </p>
-            <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--text-dim)]">
+            <p className="mt-0.5 text-[10px] font-medium uppercase tracking-[0.16em] text-[var(--text-dim)]">
               Sync Dashboard
             </p>
           </div>
@@ -141,7 +141,7 @@ export function DashboardSidebar({
 
       <nav
         className={`flex-1 space-y-0.5 overflow-y-auto overflow-x-hidden py-3 ${
-          collapsed ? "px-1.5" : "px-2"
+          collapsed ? "px-1.5" : "px-2.5"
         }`}
       >
         {nav.map((item) => {
@@ -153,20 +153,54 @@ export function DashboardSidebar({
               key={item.key}
               href={item.href}
               title={collapsed ? item.label : undefined}
-              className={`relative flex items-center rounded-lg text-sm transition ${
+              className={`relative flex items-center rounded-xl text-[13px] font-medium transition ${
                 collapsed ? "justify-center px-2 py-2.5" : "gap-3 px-3 py-2.5"
               } ${
                 isActive
-                  ? "bg-gradient-to-r from-[var(--gold)]/25 to-transparent text-[var(--gold-bright)]"
+                  ? "bg-[var(--gold)]/10 text-[var(--gold)] shadow-[inset_3px_0_0_0_var(--gold)]"
                   : "text-[var(--text-muted)] hover:bg-[var(--bg-soft)] hover:text-[var(--text)]"
               }`}
             >
-              <Icon className="h-4 w-4 shrink-0" />
+              <Icon className="h-4 w-4 shrink-0" strokeWidth={isActive ? 2.25 : 1.75} />
               {!collapsed && <span className="truncate leading-none">{item.label}</span>}
             </Link>
           );
         })}
       </nav>
+
+      {/* Compact promo visual — sits above the fold edge, does not replace Settings */}
+      <div className={`shrink-0 border-t border-[var(--border)] ${collapsed ? "p-1.5" : "p-3"}`}>
+        {collapsed ? (
+          <div className="relative mx-auto h-10 w-10 overflow-hidden rounded-xl border border-[var(--border)] shadow-[var(--shadow)]">
+            <Image
+              src="/images/sidebar-promo.jpg"
+              alt=""
+              width={40}
+              height={40}
+              className="h-full w-full object-cover"
+            />
+          </div>
+        ) : (
+          <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] shadow-[var(--shadow)]">
+            <div className="relative h-[88px] w-full">
+              <Image
+                src="/images/sidebar-promo.jpg"
+                alt="Sync workspace"
+                fill
+                sizes="220px"
+                className="object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[var(--gold-dim)]/85 via-[var(--gold)]/25 to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 p-2.5">
+                <p className="text-[11px] font-semibold tracking-tight text-white">Sync Ops</p>
+                <p className="text-[10px] leading-snug text-white/80">
+                  Live kitchen &amp; table flow
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </aside>
   );
 }
@@ -178,9 +212,9 @@ export function DashboardMobileNav({ active }: { active: NavKey }) {
         <Link
           key={item.key}
           href={item.href}
-          className={`shrink-0 rounded-lg px-3 py-1.5 text-xs ${
+          className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium ${
             isNavActive(active, item.key)
-              ? "bg-[var(--gold)]/20 text-[var(--gold-bright)]"
+              ? "bg-[var(--gold)]/10 text-[var(--gold)]"
               : "text-[var(--text-muted)]"
           }`}
         >

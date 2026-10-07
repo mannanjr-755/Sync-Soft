@@ -1,8 +1,11 @@
 @import "tailwindcss";
 
 :root {
-  --font-dm-sans: "DM Sans";
-  --font-playfair: "Playfair Display";
+  --font-sans-family: "Plus Jakarta Sans";
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
 }
 
 /* Sync brand palette from logo (royal blue #1E4BB8 + white surfaces) */
@@ -56,8 +59,8 @@
   --color-foreground: var(--text);
   --color-gold: var(--gold);
   --color-gold-bright: var(--gold-bright);
-  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-playfair), ui-serif, Georgia, serif;
+  --font-sans: var(--font-sans-family), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-sans-family), ui-sans-serif, system-ui, sans-serif;
 }
 
 * {
@@ -69,14 +72,22 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-sans);
+  font-feature-settings: "ss01" on, "cv11" on;
+  letter-spacing: -0.011em;
+  line-height: 1.5;
   min-height: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 h1,
 h2,
 h3,
 .font-display {
-  font-family: var(--font-display), Georgia, serif;
+  font-family: var(--font-display);
+  font-weight: 650;
+  letter-spacing: -0.025em;
+  line-height: 1.25;
 }
 
 ::-webkit-scrollbar {
