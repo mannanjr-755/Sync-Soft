@@ -192,9 +192,7 @@ h3,
   background-color: var(--bg-card) !important;
 }
 
-[data-theme="light"] .text-white {
-  color: var(--text) !important;
-}
+/* Keep Tailwind text-white as true white (needed for blue active nav, primary buttons). */
 
 [data-theme="light"] .border-\[\#1a2530\],
 [data-theme="light"] .border-\[\#2e3b47\],

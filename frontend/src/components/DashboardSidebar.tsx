@@ -162,10 +162,14 @@ export function DashboardSidebar({
               }`}
             >
               <Icon
-                className={`h-4 w-4 shrink-0 ${isActive ? "text-white" : "text-[var(--text-dim)] group-hover:text-[var(--gold)]"}`}
+                className={`h-4 w-4 shrink-0 ${isActive ? "!text-white" : "text-[var(--text-dim)] group-hover:text-[var(--gold)]"}`}
                 strokeWidth={isActive ? 2.25 : 1.85}
               />
-              {!collapsed && <span className="truncate leading-none">{item.label}</span>}
+              {!collapsed && (
+                <span className={`truncate leading-none ${isActive ? "text-white" : ""}`}>
+                  {item.label}
+                </span>
+              )}
             </Link>
           );
         })}
@@ -214,7 +218,7 @@ export function DashboardMobileNav({ active }: { active: NavKey }) {
           href={item.href}
           className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium transition ${
             isNavActive(active, item.key)
-              ? "bg-[var(--gold)] text-white"
+              ? "bg-[var(--gold)] !text-white"
               : "text-[var(--text-muted)] hover:bg-[var(--bg-soft)]"
           }`}
         >

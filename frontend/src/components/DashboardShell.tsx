@@ -1,5 +1,4 @@
 import { auth, signOut } from "@/lib/auth";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { TableRequestsPanel } from "@/components/TableRequestsPanel";
 import {
   DashboardMobileNav,
@@ -21,40 +20,9 @@ export async function DashboardShell({
   preparingCount?: number;
 }) {
   const session = await auth();
-  const userName = session?.user.name || "Admin";
-  const roleLabel = session?.user.role === "ADMIN" ? "Administrator" : "Staff";
   const restaurantName = session?.user.restaurantName || "Sync";
   void newOrderCount;
   void preparingCount;
-
-  const navbarControls = (
-    <div className="flex items-center gap-2 sm:gap-3">
-      <div className="flex min-w-0 items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--bg-card)] px-2.5 py-1.5">
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--gold)]/20 text-[11px] font-bold leading-none text-[var(--gold-bright)]">
-          {userName.slice(0, 1).toUpperCase()}
-        </span>
-        <div className="min-w-0 leading-tight">
-          <p className="truncate text-sm font-medium text-[var(--text)]">{userName}</p>
-          <p className="truncate text-[10px] text-[var(--text-dim)]">{roleLabel}</p>
-        </div>
-      </div>
-      <ThemeToggle className="shrink-0" />
-      <TableRequestsPanel className="shrink-0" />
-      <form
-        action={async () => {
-          "use server";
-          await signOut({ redirectTo: "/login" });
-        }}
-      >
-        <button
-          type="submit"
-          className="rounded-lg border border-[var(--border)] px-2.5 py-2 text-xs text-[var(--text-muted)] transition hover:border-[var(--gold)]/40 hover:text-[var(--gold-bright)]"
-        >
-          Log out
-        </button>
-      </form>
-    </div>
-  );
 
   return (
     <div className="flex h-screen overflow-hidden bg-[var(--bg)] text-[var(--text)]">
@@ -74,7 +42,23 @@ export async function DashboardShell({
               {restaurantName}
             </span>
           </div>
-          {navbarControls}
+
+          <div className="ml-auto flex items-center gap-2 sm:gap-3">
+            <TableRequestsPanel className="shrink-0" />
+            <form
+              action={async () => {
+                "use server";
+                await signOut({ redirectTo: "/login" });
+              }}
+            >
+              <button
+                type="submit"
+                className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--text-muted)] transition hover:border-[var(--gold)]/40 hover:text-[var(--gold)]"
+              >
+                Log out
+              </button>
+            </form>
+          </div>
         </header>
 
         <DashboardMobileNav active={active} />
